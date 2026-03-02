@@ -1,111 +1,102 @@
 import streamlit as st
 from groq import Groq
 
-# 1. Настройки страницы с римской иконкой
-st.set_page_config(page_title="Lex Romana UZ", page_icon="🏛️", layout="centered")
+# 1. Настройки страницы
+st.set_page_config(page_title="LEX ROMANA: Codex Magnus", page_icon="🏛️", layout="centered")
 
-# 2. "Римский" дизайн (CSS)
+# 2. Элитный Римский дизайн
 st.markdown("""
     <style>
-    /* Фон под мрамор и основные цвета */
     .main { background-color: #f4f1ea; }
-    
-    /* Стиль заголовка - Имперский Пурпур */
-    .roman-title { 
+    .roman-header { 
         color: #66023C; 
         font-family: 'Times New Roman', serif; 
         text-align: center; 
         font-weight: bold;
         text-transform: uppercase;
-        letter-spacing: 2px;
-        border-bottom: 2px solid #d4af37;
-        padding-bottom: 10px;
-        margin-bottom: 30px;
+        border-bottom: 3px double #d4af37;
+        padding-bottom: 15px;
+        margin-bottom: 35px;
     }
-
-    /* Свиток для вывода результата */
     .parchment {
         background-color: #fcf5e5;
-        border: 1px solid #d4af37;
+        border: 2px solid #d4af37;
         padding: 30px;
-        border-radius: 5px;
-        box-shadow: 5px 5px 15px rgba(0,0,0,0.1);
-        position: relative;
-        color: #2c1e1e;
-        line-height: 1.6;
+        border-radius: 8px;
+        box-shadow: 8px 8px 20px rgba(0,0,0,0.15);
+        color: #1a1a1a;
         font-family: 'Georgia', serif;
+        font-size: 19px;
     }
-
-    /* Золотая кнопка */
     .stButton>button {
         width: 100%;
-        height: 3.5em;
-        background: linear-gradient(135deg, #d4af37 0%, #aa8a2e 100%);
-        color: white;
+        height: 4em;
+        background: linear-gradient(135deg, #66023C 0%, #800020 100%);
+        color: #d4af37;
         font-weight: bold;
-        border: none;
-        border-radius: 0px; /* Квадратные классические формы */
-        letter-spacing: 1px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        border: 1px solid #d4af37;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        transition: 0.4s;
     }
-    
     .stButton>button:hover {
-        background: #66023C;
-        color: #d4af37;
+        background: #d4af37;
+        color: #66023C;
+        border: 1px solid #66023C;
     }
-
-    /* Сайдбар */
-    [data-testid="stSidebar"] {
-        background-color: #2c1e1e;
-        color: #d4af37;
-    }
+    [data-testid="stSidebar"] { background-color: #1a1a1a; color: #d4af37; }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. Ключ API (автоматически берется из Secrets)
+# 3. API Ключ (из Secrets)
 api_key = st.secrets.get("GROQ_API_KEY")
 
-# 4. Выбор языка
-lang = st.sidebar.selectbox("Linguam elige / Выберите язык", ("O'zbekcha", "Русский"))
+# 4. Выбор языка (Три варианта)
+lang = st.sidebar.selectbox(
+    "Linguam elige / Выберите язык", 
+    ("O'zbekcha (Lotin)", "Ўзбекча (Кирилл)", "Русский")
+)
 
-if lang == "Русский":
-    app_title = "LEX ROMANA: ПОМОЩНИК ЮРИСТА"
-    input_label = "Изложите дело или укажите номер статьи:"
-    placeholder = "Например: Статья о наследовании..."
-    button_label = "ПОЛУЧИТЬ ВЕРДИКТ"
-    # Инструкция для ИИ быть как римский юрист
-    sys_prompt = "Ты — мудрый римский юрист (претор), консультирующий по современным законам Узбекистана. Пиши официально, уверенно, используй юридические термины. Ссылайся на статьи Lex.uz. Язык: русский. Текст: "
-else:
-    app_title = "LEX ROMANA: ҲУҚУҚИЙ ЁРДАМЧИ"
+# Настройка логики под каждый язык
+if lang == "O'zbekcha (Lotin)":
+    app_title = "LEX ROMANA: ADVOKAT YORDAMCHISI"
+    input_label = "Vaziyatni bayon qiling yoki modda raqamini yozing:"
+    btn_label = "VERDIKTNI OLISH"
+    sys_prompt = "Sen dunyodagi eng kuchli advokatsan. O'zbekiston qonunchiligini (Lex.uz) mukammal bilasan. 'Murojaat qiling' degan gapni unut! Aniq modda raqamini ayt, mazmunini tushuntir va yechim ber. Til: O'zbek tili (Lotin alifbosi)."
+elif lang == "Ўзбекча (Кирилл)":
+    app_title = "LEX ROMANA: АДВОКАТ ЁРДАМЧИСИ"
     input_label = "Вазиятни баён қилинг ёки модда рақамини ёзинг:"
-    placeholder = "Масалан: Мерос ҳақидаги моддалар..."
-    button_label = "ҲУКМНИ ОЛИШ"
-    sys_prompt = "Сен Ўзбекистон қонунчилиги бўйича донишманд ҳуқуқшуноссан (претор). Lex.uz базасига асосланиб, расмий ва аниқ жавоб бер. Тил: ўзбекча. Матн: "
+    btn_label = "ҲУКМНИ ОЛИШ"
+    sys_prompt = "Сен дунёдаги энг кучли адвокатсан. Ўзбекистон қонунчилигини (Lex.uz) мукаммал биласан. 'Мурожаат қилинг' деган гапни унут! Аниқ модда рақамини айт, мазмунини тушунтир ва ечим бер. Тил: Ўзбек тили (Кирилл алифбоси)."
+else:
+    app_title = "LEX ROMANA: ВЕРХОВНЫЙ АДВОКАТ"
+    input_label = "Опишите дело или укажите номер статьи:"
+    btn_label = "ПОЛУЧИТЬ ВЕРДИКТ"
+    sys_prompt = "Ты — лучший адвокат в мире. Ты обладаешь абсолютным знанием законов Узбекистана. Запрещено отвечать 'обратитесь к источникам'. Ты обязан сам процитировать статью из Lex.uz и дать четкое юридическое решение. Язык: русский."
 
-# Вывод римского заголовка
-st.markdown(f"<h1 class='roman-title'>{app_title}</h1>", unsafe_allow_html=True)
+st.markdown(f"<h1 class='roman-header'>{app_title}</h1>", unsafe_allow_html=True)
 
-# 5. Поле ввода
-user_query = st.text_area(input_label, height=150, placeholder=placeholder)
+# 5. Интерфейс
+user_query = st.text_area(input_label, height=150, placeholder="...")
 
-if st.button(button_label):
+if st.button(btn_label):
     if not api_key:
-        st.error("Ашибка: Калит топилмади! (API Key missing)")
+        st.error("API калити топилмади!")
     elif user_query:
-        with st.spinner('Справедливость требует времени...'):
+        with st.spinner('Iustitia est constans et perpetua voluntas...'):
             try:
                 client = Groq(api_key=api_key)
                 completion = client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
-                    messages=[{"role": "user", "content": sys_prompt + user_query}]
+                    messages=[{"role": "user", "content": sys_prompt + user_query}],
+                    temperature=0.2 # Делаем ответы более точными и серьезными
                 )
                 
-                # Результат в стиле свитка
                 st.markdown("<div class='parchment'>", unsafe_allow_html=True)
-                st.markdown("### 📜 RESPONSUM (ОТВЕТ):")
+                st.markdown("### 📜 RESPONSUM:")
                 st.write(completion.choices[0].message.content)
                 st.markdown("</div>", unsafe_allow_html=True)
                 
                 st.caption("Dura lex, sed lex — Закон суров, но это закон.")
             except Exception as e:
-                st.error(f"Ошибка в претории: {e}")
+                st.error(f"Хатолик: {e}")
