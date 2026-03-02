@@ -1,102 +1,103 @@
 import streamlit as st
 from groq import Groq
 
-# 1. Настройки страницы
-st.set_page_config(page_title="LEX ROMANA: Codex Magnus", page_icon="🏛️", layout="centered")
+# 1. Настройка страницы в имперском стиле
+st.set_page_config(page_title="LEX ROMANA: ADVOCATUS", page_icon="🏛️", layout="centered")
 
-# 2. Элитный Римский дизайн
+# 2. Дизайн "Римский Мрамор и Золото"
 st.markdown("""
     <style>
     .main { background-color: #f4f1ea; }
+    .stTextArea>div>div>textarea { background-color: #ffffff; border: 2px solid #d4af37; font-size: 18px; }
     .roman-header { 
         color: #66023C; 
         font-family: 'Times New Roman', serif; 
         text-align: center; 
-        font-weight: bold;
         text-transform: uppercase;
         border-bottom: 3px double #d4af37;
-        padding-bottom: 15px;
-        margin-bottom: 35px;
+        padding-bottom: 10px;
     }
     .parchment {
         background-color: #fcf5e5;
-        border: 2px solid #d4af37;
-        padding: 30px;
-        border-radius: 8px;
-        box-shadow: 8px 8px 20px rgba(0,0,0,0.15);
-        color: #1a1a1a;
+        border-left: 10px solid #66023C;
+        padding: 25px;
+        box-shadow: 5px 5px 15px rgba(0,0,0,0.1);
         font-family: 'Georgia', serif;
         font-size: 19px;
+        color: #1a1a1a;
     }
     .stButton>button {
         width: 100%;
-        height: 4em;
-        background: linear-gradient(135deg, #66023C 0%, #800020 100%);
-        color: #d4af37;
+        background: linear-gradient(135deg, #66023C 0%, #d4af37 100%);
+        color: white;
         font-weight: bold;
-        border: 1px solid #d4af37;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        transition: 0.4s;
+        height: 3.5em;
+        border-radius: 0;
+        border: none;
     }
-    .stButton>button:hover {
-        background: #d4af37;
-        color: #66023C;
-        border: 1px solid #66023C;
-    }
-    [data-testid="stSidebar"] { background-color: #1a1a1a; color: #d4af37; }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. API Ключ (из Secrets)
+# 3. Подключение ключа (из Secrets)
 api_key = st.secrets.get("GROQ_API_KEY")
 
-# 4. Выбор языка (Три варианта)
+# 4. Выбор языка (Три варианта по твоему запросу)
 lang = st.sidebar.selectbox(
-    "Linguam elige / Выберите язык", 
+    "Lingua / Тил", 
     ("O'zbekcha (Lotin)", "Ўзбекча (Кирилл)", "Русский")
 )
 
-# Настройка логики под каждый язык
+# Формируем сверх-строгую инструкцию для "Умного Адвоката"
+base_instruction = """Сен Ўзбекистон Республикасининг энг билимдон бош адвокатисан. 
+Сен фақат Ўзбекистон қонунлари (Lex.uz) асосида жавоб берасан. 
+Сенга 'билмайман' ёки 'манбага мурожаат қилинг' дейиш ТАҚИҚЛАНАДИ.
+Жавоб стандарти:
+1. Қонун ҳужжати номи (масалан: Жиноят Кодекси).
+2. Модда рақами ва унинг аниқ мазмуни.
+3. Ушбу вазият учун ҳуқуқий ечим.
+Агар модда рақамини аниқ эслай олмасанг, 'Тахминимча' дема, балки қонун мазмунини тушунтир.
+ФАҚАТ Ўзбекистон қонунчилигини ишлат!"""
+
 if lang == "O'zbekcha (Lotin)":
-    app_title = "LEX ROMANA: ADVOKAT YORDAMCHISI"
-    input_label = "Vaziyatni bayon qiling yoki modda raqamini yozing:"
-    btn_label = "VERDIKTNI OLISH"
-    sys_prompt = "Sen dunyodagi eng kuchli advokatsan. O'zbekiston qonunchiligini (Lex.uz) mukammal bilasan. 'Murojaat qiling' degan gapni unut! Aniq modda raqamini ayt, mazmunini tushuntir va yechim ber. Til: O'zbek tili (Lotin alifbosi)."
+    app_title = "LEX ROMANA: ADVOKAT"
+    label = "Vaziyatni yozing:"
+    btn = "VERDIKT"
+    prompt = base_instruction + " Javobni Lotin alifbosida yoz."
 elif lang == "Ўзбекча (Кирилл)":
-    app_title = "LEX ROMANA: АДВОКАТ ЁРДАМЧИСИ"
-    input_label = "Вазиятни баён қилинг ёки модда рақамини ёзинг:"
-    btn_label = "ҲУКМНИ ОЛИШ"
-    sys_prompt = "Сен дунёдаги энг кучли адвокатсан. Ўзбекистон қонунчилигини (Lex.uz) мукаммал биласан. 'Мурожаат қилинг' деган гапни унут! Аниқ модда рақамини айт, мазмунини тушунтир ва ечим бер. Тил: Ўзбек тили (Кирилл алифбоси)."
+    app_title = "LEX ROMANA: АДВОКАТ"
+    label = "Вазиятни ёзинг:"
+    btn = "ҲУКМ"
+    prompt = base_instruction + " Жавобни Кирилл алифбосида ёз."
 else:
-    app_title = "LEX ROMANA: ВЕРХОВНЫЙ АДВОКАТ"
-    input_label = "Опишите дело или укажите номер статьи:"
-    btn_label = "ПОЛУЧИТЬ ВЕРДИКТ"
-    sys_prompt = "Ты — лучший адвокат в мире. Ты обладаешь абсолютным знанием законов Узбекистана. Запрещено отвечать 'обратитесь к источникам'. Ты обязан сам процитировать статью из Lex.uz и дать четкое юридическое решение. Язык: русский."
+    app_title = "LEX ROMANA: АДВОКАТ"
+    label = "Опишите ситуацию:"
+    btn = "ВЕРДИКТ"
+    prompt = "Ты Верховный Адвокат Узбекистана. Отвечай строго по законам РУз (Lex.uz). НИКОГДА не отправляй пользователя искать в гугле. Дай конкретную статью и решение на русском языке."
 
 st.markdown(f"<h1 class='roman-header'>{app_title}</h1>", unsafe_allow_html=True)
 
-# 5. Интерфейс
-user_query = st.text_area(input_label, height=150, placeholder="...")
+# 5. Ввод данных
+query = st.text_area(label, height=150, placeholder="Масалан: Меросхўрлик тартиби қандай?")
 
-if st.button(btn_label):
+if st.button(btn):
     if not api_key:
-        st.error("API калити топилмади!")
-    elif user_query:
-        with st.spinner('Iustitia est constans et perpetua voluntas...'):
+        st.error("API Key missing in Secrets!")
+    elif query:
+        with st.spinner('Iustitia...'):
             try:
                 client = Groq(api_key=api_key)
-                completion = client.chat.completions.create(
+                # УСТАНОВКА TEMPERATURE 0.0 ДЛЯ МАКСИМАЛЬНОЙ ТОЧНОСТИ
+                chat = client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
-                    messages=[{"role": "user", "content": sys_prompt + user_query}],
-                    temperature=0.2 # Делаем ответы более точными и серьезными
+                    messages=[{"role": "user", "content": prompt + "\nSavol: " + query}],
+                    temperature=0.0 
                 )
                 
                 st.markdown("<div class='parchment'>", unsafe_allow_html=True)
                 st.markdown("### 📜 RESPONSUM:")
-                st.write(completion.choices[0].message.content)
+                st.write(chat.choices[0].message.content)
                 st.markdown("</div>", unsafe_allow_html=True)
-                
-                st.caption("Dura lex, sed lex — Закон суров, но это закон.")
             except Exception as e:
-                st.error(f"Хатолик: {e}")
+                st.error(f"Error: {e}")
+
+st.caption("Dura lex, sed lex.")
