@@ -22,7 +22,7 @@ if api_key:
 # Выбор языка
 lang = st.sidebar.selectbox("Linguam elige / Тил", ("O'zbekcha (Lotin)", "Ўзбекча (Кирилл)", "Русский"))
 
-# Сверх-инструкция (Делаем Gemini лучшим адвокатом Узбекистана)
+# Сверх-инструкция
 base_instruction = """Ты — Верховный Юрист Республики Узбекистан. 
 Твоя база знаний — Lex.uz. Твои ответы — закон.
 ПРАВИЛА:
@@ -35,20 +35,22 @@ if lang == "O'zbekcha (Lotin)":
     title, label, btn = "LEX ROMANA: GEMINI", "Vaziyatni yozing:", "VERDIKT"
     prompt = base_instruction + " Javobni faqat O'zbek tilida (Lotin) ber."
 elif lang == "Ўзбекча (Кирилл)":
-    title, label, btn = "LEX ROMANA: GEMINI", "Вазиятни ёзинг:", "ҲУКМ"
+    title, label, btn = "LEX ROMANA: АДВОКАТ", "Вазиятни ёзинг:", "ҲУКМ"
     prompt = base_instruction + " Жавобни фақат Ўзбек тилида (Кирилл) бер."
 else:
-    title, label, btn = "LEX ROMANA: GEMINI", "Опишите ситуацию:", "ВЕРДИКТ"
+    title, label, btn = "LEX ROMANA: АДВОКАТ", "Опишите ситуацию:", "ВЕРДИКТ"
     prompt = base_instruction + " Отвечай на русском языке."
 
-st.markdown(f<h1 class='roman-header'>{title}</h1>", unsafe_allow_html=True)
+# ВОТ ЭТА ИСПРАВЛЕННАЯ СТРОЧКА:
+st.markdown(f"<h1 class='roman-header'>{title}</h1>", unsafe_allow_html=True)
+
 query = st.text_area(label, height=150)
 
 if st.button(btn):
     if query and api_key:
         with st.spinner('Gemini изучает свитки законов...'):
             try:
-                model = genai.GenerativeModel('gemini-1.5-pro') # Используем самую мощную модель
+                model = genai.GenerativeModel('gemini-1.5-pro')
                 response = model.generate_content(prompt + "\n\nSavol: " + query)
                 
                 st.markdown("<div class='parchment'>", unsafe_allow_html=True)
@@ -57,3 +59,5 @@ if st.button(btn):
                 st.markdown("</div>", unsafe_allow_html=True)
             except Exception as e:
                 st.error(f"Хатолик: {e}")
+
+st.caption("Dura lex, sed lex.")
